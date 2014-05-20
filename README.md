@@ -24,24 +24,103 @@ Setting up a template project requires two major steps:
 
 Install these software packages on your dev machine. It's best to use the native software management of your OS.
 
-- Recent Java VM (Java 7 and up) installed and in the path
-- Node.js installed and in the path
-- Git client
+- Recent Java VM (Java 7 and up) installed and in the path (check with java -version)
+- Node.js installed and in the path (check with node --version and npm --version)
+- Ruby (check with ruby --version) - if using SASS
+- Git client (check with git --version)
 
 
 ### Modules/Plugins
 
-Install Yeoman
+Depending on your user's OS permissions you might need administrator rights (e.g. sudo) to install.
+
+Compass (check with compass --version) - if using SASS
+
+    gem install compass
+
+Yeoman (check with yo --version)
 
     npm install -g yo
 
+Grunt (check with grunt --version)
+
+    npm install grunt --save-dev
+
+Bower (check with bower --version)
+
+    npm install -g bower
+
+grunt-connect-proxy
+
+    npm install grunt-connect-proxy --save-dev
+
+### Setup the project
+
+Generate an AngularJS project with Yeoman
+
+    mkdir yo
+    cd yo
+    yo angular <your project's name>
+
+Hit several times enter to confirm the defaults, except for the bootstrap SASS version if you don't use SASS.
+
+### Configure the Grunt Connect Proxy
+
+Edit the generated Gruntfile.js and add jsut before `grunt.initConfig`
+
+    grunt.loadNpmTasks('grunt-connect-proxy');
+
+Change the development connect configuration to this:
+
+    // The actual grunt server settings
+    connect: {
+      options: {
+        port: 9000,
+        // Change this to '0.0.0.0' to access the server from outside.
+        hostname: 'localhost',
+        livereload: 35729
+      },
+      proxies: [{
+        context: '/data-service-path', // the context of the data service
+        host: 'localhost', // wherever the data service is running
+        port: 8080 // the port that the data service is running on
+      }],
+      livereload: {
+        options: {
+          open: true,
+          base: [
+            '.tmp',
+            '<%= yeoman.app %>'
+          ],
+          middleware: function (connect, options) {
+            var middlewares = [];
+
+            if (!Array.isArray(options.base)) {
+              options.base = [options.base];
+            }
+
+            // Setup the proxy
+            middlewares.push(require('grunt-connect-proxy/lib/utils').proxyRequest);
+
+            // Serve static files
+            options.base.forEach(function(base) {
+              middlewares.push(connect.static(base));
+            });
+
+            return middlewares;
+          }
+         }
+      },
+
+Test if its running with `grunt serve`
 
 ## Resources
 
 Things I found on the net which might help me in successfully realize this project:
 
-- [Jhipster Ember Generator](https://github.com/jarias/generator-jhipster-ember) uses Gradle instead of maven
-
+- [Jhipster Ember Generator](https://github.com/jarias/generator-jhipster-ember) helped using Gradle instead of maven
+- [Tutorial : AngularJS and JAX-RS with Yeoman and Maven](https://github.com/trecloux/yeoman-maven-plugin/blob/master/TUTORIAL.md) demonstrated basic setup
+- [Grunt Proxy Setup for Yeoman](http://www.hierax.org/2014/01/grunt-proxy-setup-for-yeoman.html) helped me making the proxy run
 
 ### Steps
 
